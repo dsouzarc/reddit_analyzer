@@ -1,0 +1,13 @@
+{
+    "reddit_users": [
+        {
+            "username": "[insert_username]",
+            "password": "[insert_password]",
+            "client_id": "[insert_client_id]",
+            "client_secret": "[insert_client_secret]"
+        }
+    ],
+    "subreddit_names": [
+        "python"
+    ]
+}
