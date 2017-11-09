@@ -9,8 +9,10 @@ import json
 
 
 #Abstract Base class - All objects must extend and implement
-class Statistic(metaclass=ABCMeta):
+class Statistic(object):
     """Base Statistics class - the base representation"""
+
+    __metaclass__ = ABCMeta
 
     subreddit = None
     timestamp = None
@@ -53,7 +55,7 @@ class SubredditStatistic(Statistic):
             total_subscribers (int): total number of subscribers, including online
         """
 
-        super(SubredditStatistic, self).__init__()
+        super(SubredditStatistic, self).__init__(subreddit, timestamp)
         self.subscribers_online = subscribers_online
         self.total_subscribers = total_subscribers
         self.online_ratio = float(subscribers_online) / total_subscribers
