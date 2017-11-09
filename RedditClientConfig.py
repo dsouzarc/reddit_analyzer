@@ -5,6 +5,7 @@ import random
 
 import praw
 
+
 class RedditClientConfig(object):
 
     #Static variables
@@ -40,12 +41,13 @@ class RedditClientConfig(object):
                 user_agents_file = open(RedditClientConfig.user_agents_file_name, 'r')
 
                 for user_agent in user_agents_file:
-                    RedditClientConfig.user_agents.append(user_agent)
+                    RedditClientConfig.user_agents.append(user_agent.replace("\n", ""))
 
             #Choose a random user agent
             rand_index = random.randrange(0, len(RedditClientConfig.user_agents))
             self.user_agent = RedditClientConfig.user_agents[rand_index]
             del RedditClientConfig.user_agents[rand_index]
+
 
     def get_client(self):
         """Creates a praw.Reddit client and returns it
@@ -61,3 +63,4 @@ class RedditClientConfig(object):
                                 user_agent=self.user_agent)
 
         return client
+
