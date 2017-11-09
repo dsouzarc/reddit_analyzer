@@ -1,9 +1,13 @@
 """RedditAnalyzer.py: Main class; Responsible for actually analyzing all subreddits"""
 
+from datetime import datetime
+
 import json
 import random
 
 from RedditClientConfig import RedditClientConfig
+from Statistics import Statistic
+from Statistics import SubredditStatistic
 
 import praw
 
@@ -27,12 +31,25 @@ class SubredditAnalyzer(object):
         self.subreddit_name = subreddit_name
 
 
-    def get_subreddit_counts(self):
-        """Gets the subreddits and returns information to be analyzed"""
+    def subreddit_statistics(self):
+        """Calculates the Statistics for this particular subreddit
+
+        Return:
+            (SubredditStatistic): object holding the current statistics for this subreddit
+        """
 
         subreddit = self.reddit_client.subreddit(self.subreddit_name)
-        print("For: %s\t%s" % (self.subreddit_name, subreddit.subscribers))
+        subscribers_online = (subreddit.active_user_count + subreddit.accounts_active) / 2
+        total_subscribers = subreddit.subscribers
 
+        statistics = SubredditStatistic(subreddit=self.subreddit_name,
+                                        timestamp=datetime.utcnow(),
+                                        subscribers_online=subscribers_online,
+                                        total_subscribers=total_subscribers)
+
+        print(statistics.storage_dict())
+
+        return statistics
 
 
 
@@ -65,7 +82,7 @@ class RedditAnalyzer(object):
 
     def users_online(self):
         for subreddit, analyzer in self.subreddit_analyzers.iteritems():
-            analyzer.get_subreddit_counts()
+            analyzer.subreddit_statistics()
 
 
 reddit_analyzer = RedditAnalyzer()
