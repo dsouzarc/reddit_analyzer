@@ -46,12 +46,7 @@ class SubredditAnalyzer(object):
                                         timestamp=datetime.utcnow(),
                                         subscribers_online=subscribers_online,
                                         total_subscribers=total_subscribers)
-
-        print(statistics.storage_dict())
-
         return statistics
-
-
 
 
 #Our main analyzer
@@ -82,7 +77,8 @@ class RedditAnalyzer(object):
 
     def users_online(self):
         for subreddit, analyzer in self.subreddit_analyzers.iteritems():
-            analyzer.subreddit_statistics()
+            statistics = analyzer.subreddit_statistics()
+            print(statistics.storage_dict())
 
 
 reddit_analyzer = RedditAnalyzer()
