@@ -65,8 +65,3 @@ class SubredditStatistic(Statistic):
         """See Statistics Abstract Base Class"""
 
         return vars(self)
-
-        
-
-
-
