@@ -1,15 +1,22 @@
 """RedditAnalyzer.py: Main class; Responsible for actually analyzing all subreddits"""
 
+#Standard libraries
 from datetime import datetime
 
 import json
 import random
 
+#Project-specific modules
 from RedditClientConfig import RedditClientConfig
 from Statistics import Statistic
 from Statistics import SubredditStatistic
 
+#3rd party libraries
+from bson import json_util
+from pymongo import MongoClient
+
 import praw
+import pymongo
 
 
 #For analyzing a subreddit
@@ -29,6 +36,9 @@ class SubredditAnalyzer(object):
 
         self.reddit_client = reddit_client
         self.subreddit_name = subreddit_name
+
+
+
 
 
     def subreddit_statistics(self):
@@ -57,6 +67,9 @@ class RedditAnalyzer(object):
     subreddit_analyzers = None
     configuration = None
 
+    database = None
+    subreddit_collection = None
+
     def __init__(self, configuration_file="configuration.json"):
 
         self.reddit_clients = dict()
@@ -73,6 +86,16 @@ class RedditAnalyzer(object):
             reddit_client = random.choice(self.reddit_clients.values()).get_client()
             subreddit_analyzer = SubredditAnalyzer(reddit_client, subreddit_name)
             self.subreddit_analyzers[subreddit_name] = subreddit_analyzer
+
+        database_configuration = self.configuration.get("database_configuration")
+        mongo_client_host = ("mongodb://{username}:{password}@{ip_address}:{port}/"
+                                .format(username=database_configuration["username"],
+                                            password=database_configuration["password"],
+                                            ip_address=database_configuration["ip_address"],
+                                            port=database_configuration["port"]))
+        database_client = MongoClient(mongo_client_host)
+        self.database = database_client["Reddit"]
+        self.subreddit_collection = self.database["subreddit"]
 
 
     def users_online(self):
