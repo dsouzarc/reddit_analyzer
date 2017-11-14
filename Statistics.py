@@ -46,6 +46,8 @@ class SubredditStatistic(Statistic):
     subscribers_online = None
     total_subscribers = None
     online_ratio = None
+    timestamp_components = None
+
 
     def __init__(self, subreddit, timestamp, subscribers_online, total_subscribers):
         """Constructor
@@ -55,10 +57,20 @@ class SubredditStatistic(Statistic):
             total_subscribers (int): total number of subscribers, including online
         """
 
+        #Normalize the date
+        timestamp = timestamp.replace(second=0, microsecond=0)
         super(SubredditStatistic, self).__init__(subreddit, timestamp)
+
         self.subscribers_online = subscribers_online
         self.total_subscribers = total_subscribers
         self.online_ratio = float(subscribers_online) / total_subscribers
+        self.timestamp_components = dict()
+
+        self.timestamp_components["month"] = timestamp.month
+        self.timestamp_components["weekday"] = timestamp.weekday()
+        self.timestamp_components["day"] = timestamp.day
+        self.timestamp_components["hour"] = timestamp.hour
+        self.timestamp_components["minute"] = timestamp.minute
 
 
     def storage_dict(self):
