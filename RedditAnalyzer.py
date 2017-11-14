@@ -5,6 +5,7 @@ from datetime import datetime
 
 import json
 import random
+import time
 
 #Project-specific modules
 from RedditClientConfig import RedditClientConfig
@@ -19,7 +20,6 @@ import praw
 import pymongo
 
 
-#For analyzing a subreddit
 class SubredditAnalyzer(object):
     """Analyzes a specific subreddit"""
 
@@ -38,9 +38,6 @@ class SubredditAnalyzer(object):
         self.subreddit_name = subreddit_name
 
 
-
-
-
     def subreddit_statistics(self):
         """Calculates the Statistics for this particular subreddit
 
@@ -48,18 +45,21 @@ class SubredditAnalyzer(object):
             (SubredditStatistic): object holding the current statistics for this subreddit
         """
 
-        subreddit = self.reddit_client.subreddit(self.subreddit_name)
-        subscribers_online = (subreddit.active_user_count + subreddit.accounts_active) / 2
-        total_subscribers = subreddit.subscribers
+        try:
+            subreddit = self.reddit_client.subreddit(self.subreddit_name)
+        except Exception as e:
+            print("Error getting subreddit: %s " % e)
+        else:
+            subscribers_online = (subreddit.active_user_count + subreddit.accounts_active) / 2
+            total_subscribers = subreddit.subscribers
 
-        statistics = SubredditStatistic(subreddit=self.subreddit_name,
-                                        timestamp=datetime.utcnow(),
-                                        subscribers_online=subscribers_online,
-                                        total_subscribers=total_subscribers)
+            statistics = SubredditStatistic(subreddit=self.subreddit_name,
+                                            timestamp=datetime.utcnow(),
+                                            subscribers_online=subscribers_online,
+                                            total_subscribers=total_subscribers)
         return statistics
 
 
-#Our main analyzer
 class RedditAnalyzer(object):
     """Main analyzer"""
 
@@ -68,7 +68,7 @@ class RedditAnalyzer(object):
     configuration = None
 
     database = None
-    subreddit_collection = None
+    subreddit_stats = None
 
     def __init__(self, configuration_file="configuration.json"):
 
@@ -90,20 +90,44 @@ class RedditAnalyzer(object):
         database_configuration = self.configuration.get("database_configuration")
         mongo_client_host = ("mongodb://{username}:{password}@{ip_address}:{port}/"
                                 .format(username=database_configuration["username"],
-                                            password=database_configuration["password"],
-                                            ip_address=database_configuration["ip_address"],
-                                            port=database_configuration["port"]))
+                                        password=database_configuration["password"],
+                                        ip_address=database_configuration["ip_address"],
+                                        port=database_configuration["port"]))
         database_client = MongoClient(mongo_client_host)
+
         self.database = database_client["Reddit"]
-        self.subreddit_collection = self.database["subreddit"]
+        self.subreddit_stats = self.database["subreddit_stats"]
 
 
     def users_online(self):
         for subreddit, analyzer in self.subreddit_analyzers.iteritems():
+            print("Trying: %s" % subreddit)
             statistics = analyzer.subreddit_statistics()
-            print(statistics.storage_dict())
+            print("Got: %s" % statistics)
+
+            try:
+                inserted_result = self.subreddit_stats.insert_one(statistics.storage_dict())
+            except Exception as e:
+                print("Error inserting subreddit data: % " % e)
+            else:
+                print(statistics.storage_dict())
+                print(inserted_result)
+            finally:
+                time.sleep(1)
 
 
-reddit_analyzer = RedditAnalyzer()
-reddit_analyzer.users_online()
+if __name__ == "__main__":
+    """Main method"""
 
+    reddit_analyzer = RedditAnalyzer()
+
+    while True:
+        start = time.time()
+        try:
+            reddit_analyzer.users_online()
+        except Exception as e:
+            print("Error calculating: %s" % e)
+        finally:
+            end = time.time()
+            print("Finished subreddits in %s - sleeping now" % (end - start))
+            time.sleep(5 * 60 - (end - start))
